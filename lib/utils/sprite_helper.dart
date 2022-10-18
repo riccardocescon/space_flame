@@ -1,3 +1,3 @@
 class SpriteHelper {
-  static const String ship = "assets/img/sprites/ships/ship_001.png";
+  static const String ship = "sprites/ships/ship_001.png";
 }
