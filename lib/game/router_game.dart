@@ -4,7 +4,8 @@ import 'package:space_flame/game/pages/homepage.dart';
 import 'package:space_flame/game/pages/space_flame.dart';
 import 'package:space_flame/utils/navigation.dart';
 
-class RouterGame extends FlameGame with HasTappableComponents {
+class RouterGame extends FlameGame
+    with HasTappableComponents, HasDraggableComponents {
   late final RouterComponent router;
 
   @override

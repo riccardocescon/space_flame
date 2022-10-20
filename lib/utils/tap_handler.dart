@@ -2,10 +2,8 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
-import 'package:flame/extensions.dart';
-import 'package:space_flame/game/style.dart';
 
-class TapHandler extends PositionComponent with TapCallbacks {
+class TapHandler extends PositionComponent with DragCallbacks {
   TapHandler() : super(anchor: Anchor.center);
 
   bool tapped = false;
@@ -30,17 +28,22 @@ class TapHandler extends PositionComponent with TapCallbacks {
   }
 
   @override
-  void onTapDown(TapDownEvent event) {
-    print('object');
+  void onDragStart(DragStartEvent event) {
+    print('Drag Start');
     tapped = true;
     _tapPosition = event.canvasPosition;
   }
 
   @override
-  void onTapUp(TapUpEvent event) {
-    tapped = false;
+  void onDragUpdate(DragUpdateEvent event) {
+    print('Drag Moving $event.canvasPosition.toString()');
+    tapped = true;
+    _tapPosition = event.canvasPosition;
   }
 
   @override
-  void onTapCancel(TapCancelEvent event) {}
+  void onDragEnd(DragEndEvent event) {
+    print('finished');
+    tapped = false;
+  }
 }
