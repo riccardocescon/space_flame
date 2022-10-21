@@ -33,9 +33,8 @@ class Ship extends SpriteComponent with CollisionCallbacks {
   }
 
   @override
-  void update(double dt) {
+  void move(double dt) {
     if (!stop) {
-      super.update(dt);
       position += _direction.normalized() * dt * _speed;
     }
   }

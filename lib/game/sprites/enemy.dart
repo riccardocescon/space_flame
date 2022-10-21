@@ -46,11 +46,8 @@ class Enemy extends SpriteComponent with CollisionCallbacks {
     return (Vector2(position.x, position.y));
   }
 
-  @override
-  void update(double dt) {
-    // TODO: implement update
+  void move(double dt) {
     if (!stop) {
-      super.update(dt);
       position += _direction.normalized() * dt * _speed;
     }
   }
