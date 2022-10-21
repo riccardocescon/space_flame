@@ -11,10 +11,10 @@ import 'package:space_flame/game/style.dart';
 import 'package:space_flame/utils/tap_handler.dart';
 
 class SpaceFlame extends FlameGame
-    with HasDraggableComponents, HasCollisionDetection, HasTappableComponents {
+    with DragCallbacks, HasCollisionDetection, HasTappableComponents {
   late Ship ship;
   late TapHandler tapHandler;
-  late List<Enemy> enemy = List.empty(growable: true);
+  List<Enemy> enemy = [];
   double respawnTime = 1;
   double timePassed = 0;
   Random random = Random();
@@ -47,7 +47,7 @@ class SpaceFlame extends FlameGame
       return;
     }
     for (int i = 0; i < enemy.length; i++) {
-      Enemy e = enemy.elementAt(i);
+      Enemy e = enemy[i];
       e.move(dt);
       if (e.getCollidingInfo()) {
         print("colliding in main");
@@ -58,17 +58,16 @@ class SpaceFlame extends FlameGame
         ship.stopSprite();
         pauseEngine();
       }
-      if (e.getPosition().y - e.size.y < canvasSize.y) {
-        continue;
+      if (e.getPosition().y - e.size.y > canvasSize.y) {
+        enemy.removeAt(i);
+        remove(e);
+        i--;
       }
-      enemy.removeAt(i);
-      remove(e);
-      i--;
     }
     timePassed += dt;
     if (timePassed >= respawnTime) {
       enemy.add(Enemy()
-        ..position = Vector2(random.nextInt(size.x.toInt() - 20) + 20, 0)
+        ..position = Vector2(random.nextInt(size.x.toInt() - 40) + 20, 0)
         ..setSpeed(random.nextInt(500) + 100));
       timePassed = 0;
       add(
@@ -76,12 +75,12 @@ class SpaceFlame extends FlameGame
       );
     }
     if (tapHandler.tapped) {
-      if ((tapHandler.tapPosition.x - ship.position.x).abs() > 2 &&
-          (tapHandler.tapPosition.y - ship.position.y).abs() > 2) {
-        Vector2 moveDirection = Vector2(
-            tapHandler.tapPosition.x - ship.position.x,
-            tapHandler.tapPosition.y - ship.position.y);
-        ship.setMoveDirection(moveDirection);
+      Vector2 inputThreshold = Vector2(
+        tapHandler.tapPosition.x - ship.position.x,
+        tapHandler.tapPosition.y - ship.position.y,
+      );
+      if (inputThreshold.x.abs() > 1.5 && inputThreshold.y.abs() > 1.5) {
+        ship.setMoveDirection(inputThreshold);
       } else {
         ship.setMoveDirection(Vector2.zero());
       }
