@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 
-class TapHandler extends PositionComponent with DragCallbacks, TapCallbacks {
+class TapHandler extends PositionComponent {
   TapHandler() : super(anchor: Anchor.center);
 
   bool tapped = false;

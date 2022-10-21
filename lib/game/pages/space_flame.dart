@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:developer';
+import 'dart:math' as math;
 
 import 'package:flame/experimental.dart';
 import 'package:flame/game.dart';
@@ -17,7 +18,7 @@ class SpaceFlame extends FlameGame
   List<Enemy> enemy = [];
   double respawnTime = 1;
   double timePassed = 0;
-  Random random = Random();
+  math.Random random = math.Random();
   bool pause = false;
 
   @override
@@ -88,5 +89,19 @@ class SpaceFlame extends FlameGame
       ship.setMoveDirection(Vector2.zero());
     }
     ship.move(dt);
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    log("tapped");
+    pauseEngine();
+    super.onTapDown(event);
+  }
+
+  @override
+  void onTapUp(TapUpEvent event) {
+    log("tapped up");
+    resumeEngine();
+    super.onTapUp(event);
   }
 }
