@@ -1,12 +1,16 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:space_flame/game/pages/homepage.dart';
 import 'package:space_flame/game/pages/space_flame.dart';
+import 'package:space_flame/utils/navigation.dart';
 
 void main() {
-  final game = SpaceFlame();
   runApp(
-    GameWidget(
-      game: game,
+    MaterialApp(
+      routes: {
+        Navigation.homepage: (context) => const HomePage(),
+        Navigation.gamepage: (context) => const SpaceFlameGame(),
+      },
+      initialRoute: Navigation.homepage,
     ),
   );
 }

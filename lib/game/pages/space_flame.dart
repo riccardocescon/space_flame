@@ -1,25 +1,41 @@
-import 'dart:async';
-import 'dart:developer';
 import 'dart:math' as math;
-
+import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/game.dart';
-import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
-import 'package:space_flame/game/sprites/enemy.dart';
-import 'package:space_flame/game/sprites/ship.dart';
-import 'package:space_flame/game/style.dart';
-import 'package:space_flame/utils/tap_handler.dart';
+
+import '../sprites/enemy.dart';
+import '../sprites/ship.dart';
+import '../style.dart';
+
+class SpaceFlameGame extends StatefulWidget {
+  const SpaceFlameGame({super.key});
+
+  @override
+  State<SpaceFlameGame> createState() => _SpaceFlameGameState();
+}
+
+class _SpaceFlameGameState extends State<SpaceFlameGame> {
+  @override
+  Widget build(BuildContext context) {
+    return GameWidget(
+      game: SpaceFlame(),
+    );
+  }
+}
 
 class SpaceFlame extends FlameGame
-    with DragCallbacks, HasCollisionDetection, HasTappableComponents {
+    with HasDraggableComponents, HasTappableComponents, HasCollisionDetection {
   late Ship ship;
-  late TapHandler tapHandler;
+  //late TapHandler tapHandler;
   List<Enemy> enemy = [];
   double respawnTime = 1;
   double timePassed = 0;
   math.Random random = math.Random();
   bool pause = false;
+  final double inputTreshold = 1.5;
+
+  late Vector2 touchPosition;
 
   @override
   Future<void> onLoad() async {
@@ -28,10 +44,10 @@ class SpaceFlame extends FlameGame
       ..size = Vector2(64, 64)
       ..setSpeed(500);
     ship.anchor = Anchor.center;
+    touchPosition = ship.position;
     await addAll([
       Background(const Color.fromARGB(255, 2, 0, 23)),
       ship,
-      tapHandler = TapHandler(),
     ]);
   }
 
@@ -75,16 +91,10 @@ class SpaceFlame extends FlameGame
         enemy.last,
       );
     }
-    if (tapHandler.tapped) {
-      Vector2 inputThreshold = Vector2(
-        tapHandler.tapPosition.x - ship.position.x,
-        tapHandler.tapPosition.y - ship.position.y,
-      );
-      if (inputThreshold.x.abs() > 1.5 && inputThreshold.y.abs() > 1.5) {
-        ship.setMoveDirection(inputThreshold);
-      } else {
-        ship.setMoveDirection(Vector2.zero());
-      }
+    Vector2 direction = touchPosition - ship.position;
+    if (direction.x.abs() > inputTreshold &&
+        direction.y.abs() > inputTreshold) {
+      ship.setMoveDirection(direction);
     } else {
       ship.setMoveDirection(Vector2.zero());
     }
@@ -92,16 +102,20 @@ class SpaceFlame extends FlameGame
   }
 
   @override
-  void onTapDown(TapDownEvent event) {
-    log("tapped");
-    pauseEngine();
-    super.onTapDown(event);
+  void onDragStart(DragStartEvent event) {
+    touchPosition = event.canvasPosition;
+    super.onDragStart(event);
   }
 
   @override
-  void onTapUp(TapUpEvent event) {
-    log("tapped up");
-    resumeEngine();
-    super.onTapUp(event);
+  void onDragUpdate(DragUpdateEvent event) {
+    touchPosition = event.canvasPosition;
+    super.onDragUpdate(event);
+  }
+
+  @override
+  void onDragEnd(DragEndEvent event) {
+    ship.setMoveDirection(Vector2.zero());
+    super.onDragEnd(event);
   }
 }
