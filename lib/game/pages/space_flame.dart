@@ -19,7 +19,27 @@ class _SpaceFlameGameState extends State<SpaceFlameGame> {
   @override
   Widget build(BuildContext context) {
     return GameWidget(
-      game: SpaceFlame(),
+      game: SpaceFlame(onGameOver: gameOverDialog),
+    );
+  }
+
+  void gameOverDialog(Function onResume) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("Game Over"),
+        content: const Text("You lose"),
+        actions: [
+          MaterialButton(
+            onPressed: () {
+              Navigator.pop(context);
+              onResume.call();
+            },
+            child: const Text("Close"),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -27,15 +47,18 @@ class _SpaceFlameGameState extends State<SpaceFlameGame> {
 class SpaceFlame extends FlameGame
     with HasDraggableComponents, HasTappableComponents, HasCollisionDetection {
   late Ship ship;
-  //late TapHandler tapHandler;
   List<Enemy> enemy = [];
-  double respawnTime = 1;
+  double respawnTime = 0.3;
   double timePassed = 0;
   math.Random random = math.Random();
   bool pause = false;
   final double inputTreshold = 1.5;
 
   late Vector2 touchPosition;
+
+  final Function(Function) onGameOver;
+
+  SpaceFlame({required this.onGameOver});
 
   @override
   Future<void> onLoad() async {
@@ -60,19 +83,20 @@ class SpaceFlame extends FlameGame
   @override
   void update(double dt) {
     super.update(dt);
-    if (pause) {
-      return;
-    }
     for (int i = 0; i < enemy.length; i++) {
       Enemy e = enemy[i];
       e.move(dt);
       if (e.getCollidingInfo()) {
-        print("colliding in main");
-        pause = true;
-        for (Enemy e in enemy) {
+        /* for (Enemy e in enemy) {
           e.stopSprite();
-        }
-        ship.stopSprite();
+        } */
+        /* ship.stopSprite(); */
+        onGameOver.call(() {
+          enemy.removeAt(i);
+          remove(e);
+          i--;
+          resumeEngine();
+        });
         pauseEngine();
       }
       if (e.getPosition().y - e.size.y > canvasSize.y) {
@@ -85,7 +109,7 @@ class SpaceFlame extends FlameGame
     if (timePassed >= respawnTime) {
       enemy.add(Enemy()
         ..position = Vector2(random.nextInt(size.x.toInt() - 40) + 20, 0)
-        ..setSpeed(random.nextInt(500) + 100));
+        ..setSpeed(random.nextInt(800) + 500));
       timePassed = 0;
       add(
         enemy.last,
