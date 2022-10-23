@@ -21,9 +21,13 @@ class Ship extends SpriteComponent with CollisionCallbacks {
         SpriteHelper.hitBox[SpriteHelper.ship]!,
         parentSize: size,
       )
-        ..paint = hitboxPaint
-        ..renderShape = true,
+      //..paint = hitboxPaint
+      /* ..renderShape = true */,
     );
+  }
+
+  void moveAt(Vector2 goal) {
+    position = goal;
   }
 
   @override

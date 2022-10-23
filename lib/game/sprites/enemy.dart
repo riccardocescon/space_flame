@@ -32,8 +32,9 @@ class Enemy extends SpriteComponent with CollisionCallbacks {
         ],
         parentSize: size,
       )
-        ..paint = hitboxPaint
-        ..renderShape = true,
+      /* ..paint = hitboxPaint
+        ..renderShape = true */
+      ,
     );
     flipVertically();
   }

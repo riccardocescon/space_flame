@@ -3,6 +3,8 @@ import 'package:flame/components.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:space_flame/utils/sprite_helper.dart';
 
 import '../sprites/enemy.dart';
 import '../sprites/ship.dart';
@@ -16,11 +18,56 @@ class SpaceFlameGame extends StatefulWidget {
 }
 
 class _SpaceFlameGameState extends State<SpaceFlameGame> {
+  bool showFirstScreen = true;
+  @override
+  void initState() {
+    Future.delayed(const Duration(milliseconds: 1000)).then((value) {
+      setState(() {
+        showFirstScreen = false;
+      });
+    });
+    super.initState();
+  }
+
+  int life = 3;
+  StateSetter? lifeSetState;
   @override
   Widget build(BuildContext context) {
-    return GameWidget(
-      game: SpaceFlame(onGameOver: gameOverDialog),
+    timeDilation = 5.0;
+    if (showFirstScreen) {
+      return firsScreen();
+    }
+    timeDilation = 1.0;
+    return Stack(
+      children: [
+        GameWidget(
+          game: SpaceFlame(onGameOver: gameOverDialog, onLoseLife: onLifeLose),
+        ),
+        const Icon(Icons.menu, size: 40, color: Colors.white),
+        Align(
+          alignment: Alignment.bottomRight,
+          child: StatefulBuilder(
+            builder: (context, lifeSetState) {
+              this.lifeSetState ??= lifeSetState;
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  for (int i = 0; i < life; i++)
+                    const Icon(Icons.favorite, size: 40, color: Colors.red),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
+  }
+
+  int onLifeLose() {
+    lifeSetState!(() {
+      life--;
+    });
+    return life;
   }
 
   void gameOverDialog(Function onResume) {
@@ -34,12 +81,42 @@ class _SpaceFlameGameState extends State<SpaceFlameGame> {
           MaterialButton(
             onPressed: () {
               Navigator.pop(context);
-              onResume.call();
+              Navigator.pop(context);
             },
             child: const Text("Close"),
           ),
         ],
       ),
+    );
+  }
+
+  Widget firsScreen() {
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Hero(
+                tag: "map",
+                child: Container(
+                  color: const Color.fromARGB(255, 2, 0, 23),
+                ),
+              ),
+              Hero(
+                tag: "ship",
+                child: SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: Image.asset(
+                    SpriteHelper.spritePath + SpriteHelper.ship,
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -52,20 +129,20 @@ class SpaceFlame extends FlameGame
   double timePassed = 0;
   math.Random random = math.Random();
   bool pause = false;
-  final double inputTreshold = 1.5;
+  final double inputTreshold = 2;
 
   late Vector2 touchPosition;
 
   final Function(Function) onGameOver;
-
-  SpaceFlame({required this.onGameOver});
+  final int Function() onLoseLife;
+  SpaceFlame({required this.onGameOver, required this.onLoseLife});
 
   @override
   Future<void> onLoad() async {
     ship = Ship()
       ..position = Vector2(size.x / 2, size.y / 2)
       ..size = Vector2(64, 64)
-      ..setSpeed(500);
+      ..setSpeed(1000);
     ship.anchor = Anchor.center;
     touchPosition = ship.position;
     await addAll([
@@ -87,17 +164,18 @@ class SpaceFlame extends FlameGame
       Enemy e = enemy[i];
       e.move(dt);
       if (e.getCollidingInfo()) {
-        /* for (Enemy e in enemy) {
-          e.stopSprite();
-        } */
-        /* ship.stopSprite(); */
-        onGameOver.call(() {
-          enemy.removeAt(i);
-          remove(e);
-          i--;
-          resumeEngine();
-        });
-        pauseEngine();
+        if (onLoseLife() == 0) {
+          onGameOver.call(() {
+            enemy.removeAt(i);
+            remove(e);
+            i--;
+            resumeEngine();
+          });
+          pauseEngine();
+        }
+        enemy.removeAt(i);
+        remove(e);
+        i--;
       }
       if (e.getPosition().y - e.size.y > canvasSize.y) {
         enemy.removeAt(i);
@@ -109,7 +187,7 @@ class SpaceFlame extends FlameGame
     if (timePassed >= respawnTime) {
       enemy.add(Enemy()
         ..position = Vector2(random.nextInt(size.x.toInt() - 40) + 20, 0)
-        ..setSpeed(random.nextInt(800) + 500));
+        ..setSpeed(random.nextInt(200) + 400));
       timePassed = 0;
       add(
         enemy.last,
@@ -122,7 +200,8 @@ class SpaceFlame extends FlameGame
     } else {
       ship.setMoveDirection(Vector2.zero());
     }
-    ship.move(dt);
+    //ship.move(dt);
+    ship.moveAt(touchPosition);
   }
 
   @override
